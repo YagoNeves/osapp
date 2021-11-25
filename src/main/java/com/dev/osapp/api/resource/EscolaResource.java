@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +44,7 @@ public class EscolaResource {
 	}
 	
 	@PostMapping
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_ESCOLA') and hasAuthority('SCOPE_write')")
 	public ResponseEntity<Escola> criar(@Valid @RequestBody Escola escola, HttpServletResponse response){
 		Escola escolaSalva = escolaRepository.save(escola);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, escolaSalva.getCodigo()));
@@ -50,6 +52,7 @@ public class EscolaResource {
 	}
 	
 	@GetMapping("/{codigo}")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_ESCOLA') and hasAuthority('SCOPE_read')")
 	public ResponseEntity<Escola> buscaPeloCodigo(@PathVariable Long codigo){
 		Escola escola = escolaRepository.findById(codigo).orElse(null);
 		return escola != null ? ResponseEntity.ok(escola) : ResponseEntity.notFound().build();
@@ -57,10 +60,13 @@ public class EscolaResource {
 	
 	@DeleteMapping("/{codigo}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("hasAuthority('ROLE_REMOVER_ESCOLA') and hasAuthority('SCOPE_write')")
 	public void remover(@PathVariable Long codigo) {
 		escolaRepository.deleteById(codigo);
 	}
 	@PutMapping("/{codigo}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_ESCOLA') and hasAuthority('SCOPE_write')")
 	public ResponseEntity<Escola> atualizar(@PathVariable Long codigo, @Valid @RequestBody Escola escola){
 		Escola escolaSalva = escolaService.atualizar(codigo, escola);
 		return ResponseEntity.ok(escolaSalva);
